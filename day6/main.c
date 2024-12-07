@@ -3,7 +3,7 @@
 #include <string.h>
 #define true 1
 #define false 0
-//#define Q2
+#define Q2
 typedef struct {
     int x,y;
 } vec2;
