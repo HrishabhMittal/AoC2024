@@ -43,26 +43,61 @@ void remove(std::vector<T>& t,int index) {
     }
     t.pop_back();
 }
-void eliminate() {
-
+template<typename T>
+int indexOf(std::vector<T>& v,T e) {
+    for (int i=0;i<v.size();i++) {
+        if (v[i]==e) {
+            return i;
+        }
+    }
+    return -1;
 }
-std::vector<computer*> Expand(std::vector<computer*> group) {
-    std::unordered_map<std::string,int> map;
-    for (auto g:group) {
-        for (int i=0;i<g->connections.size();i++) {
-            map[g->connections[i]->name]++;
-        }
+void removeComputer(std::string c) {
+    computer* cc=comp[c];
+    for (auto i:cc->connections) {
+        remove(i->connections,indexOf(i->connections,cc));
     }
-    std::vector<computer*> max=group;
-    group.push_back(nullptr);
-    for (auto c:comp) {
-        if (map[c.first]==group.size()-1) {
-            group.back()=c.second;
-            std::vector v=Expand(group);
-            if (v.size()>max.size()) max=v;
+    comp.erase(c);
+    delete cc;
+}
+std::vector<std::vector<computer*>> cache,ncache;
+void check(int in,std::vector<computer*>& c) {
+    if (in==c.size()) {
+        for (auto j:c) {
+            j->done=1;
         }
+        ncache.push_back(c);
+    } else {
+        std::unordered_map<std::string,int> map;
+        int x=1;
+        for (auto i:c) {
+            x&=i->done;
+            for (auto j:i->connections) {
+                map[j->name]++;
+            }
+        }
+        if (x) return;
+        c.push_back(nullptr);
+        for (auto i:map) {
+            if (i.second==c.size()-1) {
+                c.back()=comp[i.first];
+                check(in,c);
+            }
+        }
+        c.pop_back();
     }
-    return max;
+}
+bool allZero() {
+    for (auto i:comp) {
+        if (i.second->done) return 0;
+    }
+    return 1;
+}
+void purge() {
+    for (auto i:comp) {
+        if (!i.second->done) removeComputer(i.first);
+        i.second->done=0;
+    }
 }
 int main(int argc,char**argv) {
     std::string line;
@@ -71,16 +106,21 @@ int main(int argc,char**argv) {
         connect(line);
     }
     file.close();
-    std::vector<computer*> co;
-    for (auto c:comp) {
-        computer* i=c.second;
-        std::cout << "yo" << std::endl;
-        std::vector v=Expand({i});
-        if (v.size()>co.size()) co=v;
-        std::cout << "yo" << std::endl;
+    int n=2;
+    for (auto i:comp) {
+        cache.push_back({i.second});
     }
-    for (auto i:co) {
-        std::cout << i->name << " ";
+    while (true) {
+        for (int i=0;i<cache.size();i++) {
+            check(n,cache[i]);
+        }
+        cache=ncache;
+        ncache={};
+        if (!allZero()) purge();
+        else break;
+        n++;
     }
-    std::cout << std::endl;
+    for (auto i:comp) {
+        std::cout << i.second->name << std::endl;
+    }
 }
