@@ -4,39 +4,56 @@
 #include <fstream>
 #include <vector>
 std::unordered_map<std::string,int> map;
-std::unordered_map<std::string,std::string> altnames;
-std::vector<std::string> undefined;
 std::unordered_map<std::string,std::vector<std::string>> ins;
-
-std::pair<std::string,std::vector<std::string>> checkforrule(std::string arg1,std::string op,std::string arg2) {
-    for (auto i:ins) {
-        if (i.second==std::vector{arg1,op,arg2} || i.second==std::vector{arg2,op,arg1}) {
-            return i;
-        }
-    }
-    return {"none",{}};
-}
-
-
-std::string x(int i) {
-    std::string out = std::to_string(i);
-    if (out.size()==1) return "x0"+out;
-    return "x"+out;
-}
-std::string y(int i) {
-    std::string out = std::to_string(i);
-    if (out.size()==1) return "y0"+out;
-    return "y"+out;
-}
 std::string z(int i) {
     std::string out = std::to_string(i);
     if (out.size()==1) return "z0"+out;
     return "z"+out;
 }
-std::string aplha(char c,int i) {
-    std::string out = std::to_string(i);
-    if (out.size()==1) return c+"0"+out;
-    return c+out;
+void solve() {
+    int i=1;
+    while (map.count(z(i))) {
+        if (map.count(z(i+1))) {
+            if (ins[z(i)][1]!="XOR") {
+                std::cout << z(i)  << std::endl;
+            }
+        } else {
+            if (ins[z(i)][1]!="OR") {
+                std::cout << z(i)  << std::endl;
+            }
+        }
+        i++;
+    }
+    for (auto a:ins) {
+        if (a.second[1]=="OR") {
+            if (ins[a.second[0]][1]!="AND") {
+                std::cout << a.second[0] << std::endl;
+            }
+            if (ins[a.second[2]][1]!="AND") {
+                std::cout << a.second[2]<< std::endl;
+            }
+        } else if (a.second[1]=="XOR") {
+            if (a.second[0][0]=='x' || a.second[0][0]=='y') continue;
+            else {
+                int xorr=0;
+                if (ins[a.second[0]][1]=="XOR") {
+                    xorr=1;
+                } else if (ins[a.second[0]][1]!="OR" && ins[a.second[0]]!=std::vector<std::string>{"x00","AND","y00"} && ins[a.second[0]]!=std::vector<std::string>{"y00","AND","x00"}) {
+                    xorr=-1;
+                    std::cout << a.second[0] << std::endl;
+                }
+                if (ins[a.second[2]][1]=="XOR") {
+                    if (xorr==1) {
+                        std::cout << a.second[0] << " or " << a.second[2] << std::endl;
+                    }
+                } else if (ins[a.second[2]][1]!="OR" && ins[a.second[2]]!=std::vector<std::string>{"x00","AND","y00"} && ins[a.second[2]]!=std::vector<std::string>{"y00","AND","x00"}) {
+                    std::cout << a.second[2] << std::endl;
+                } else {
+                    if (xorr==0) std::cout << a.second[0] << " or " << a.second[2] << std::endl;
+                }
+            }
+        }
+    }
 }
 int main(int argc,char**argv) {
     std::ifstream file(argv[1]);
@@ -53,6 +70,8 @@ int main(int argc,char**argv) {
             file>>arg2;
             file>>res;file>>res;
             ins[res]={s,op,arg2};
+            map[res]=0;
         }
     }
+    solve();
 }
